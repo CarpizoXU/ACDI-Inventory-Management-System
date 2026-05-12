@@ -32,7 +32,18 @@ async function register(req, res, next) {
   }
 }
 
+async function profile(req, res, next) {
+  try {
+    return apiResponse.success(res, {
+      user: req.user,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   login,
   register,
+  profile,
 };
