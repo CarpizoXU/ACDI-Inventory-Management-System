@@ -2,13 +2,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
 
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET || 'acdi-local-jwt-secret';
+  if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production');
+  }
+  return secret;
+}
+
 function generateToken(user) {
   const payload = {
     sub: user._id,
     email: user.email,
     role: user.role,
   };
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecret();
   const expiresIn = process.env.JWT_EXPIRES_IN || '1d';
   return jwt.sign(payload, secret, { expiresIn });
 }
@@ -45,7 +53,7 @@ async function authenticateUser({ email, password }) {
 }
 
 function verifyToken(token) {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecret();
   return jwt.verify(token, secret);
 }
 

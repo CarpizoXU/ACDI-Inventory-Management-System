@@ -1,5 +1,6 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../app');
 const User = require('../models/User');
 
@@ -10,9 +11,12 @@ const testUser = {
   role: 'admin',
 };
 
+let mongoServer;
+
 describe('Authentication API', () => {
   beforeAll(async () => {
-    await mongoose.connect('mongodb://127.0.0.1:27017/acdi_inventory_test', {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri(), {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -20,7 +24,8 @@ describe('Authentication API', () => {
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 
   test('should register a user and return created response', async () => {
