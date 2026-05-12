@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+
+# Logs
+yarn-debug.log*
+npm-debug.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Dependency directories
+**/node_modules
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Vite cache
+node_modules/.vite
+
+# Mac/System files
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Coverage
+coverage/
+
+# Misc
+*.tgz
