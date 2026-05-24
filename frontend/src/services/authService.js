@@ -1,16 +1,16 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-});
+import api from './api';
 
 const login = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
   return response;
 };
 
+const profile = async () => {
+  const response = await api.get('/auth/profile');
+  return response;
+};
+
 export default {
   login,
+  profile,
 };
