@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -5,20 +6,26 @@ import authService from '../services/authService';
 import { setCredentials } from '../store/authSlice';
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState } = useForm();
+  const { register, handleSubmit } = useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   async function onSubmit(values) {
-    const response = await authService.login(values);
-    dispatch(setCredentials(response.data));
-    navigate('/');
+    try {
+      const response = await authService.login(values);
+      dispatch(setCredentials(response.data.data));
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-lg p-8">
         <h1 className="text-2xl font-semibold mb-6">ACDI Inventory Login</h1>
+        {error && <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700">Email</label>
