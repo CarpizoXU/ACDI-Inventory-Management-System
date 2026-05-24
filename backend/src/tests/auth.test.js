@@ -45,4 +45,26 @@ describe('Authentication API', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveProperty('token');
   });
+  
+  test('should return authenticated user profile', async () => {
+
+  const loginResponse = await request(app)
+    .post('/api/v1/auth/login')
+    .send({
+      email: testUser.email,
+      password: testUser.password,
+    });
+
+  const token = loginResponse.body.data.token;
+
+  const response = await request(app)
+    .get('/api/v1/auth/profile')
+    .set('Authorization', `Bearer ${token}`);
+
+  expect(response.statusCode).toBe(200);
+  expect(response.body.success).toBe(true);
+  expect(response.body.data.user.email).toBe(testUser.email);
+  });
 });
+
+
