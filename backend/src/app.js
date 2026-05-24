@@ -6,6 +6,9 @@ const morgan = require('morgan');
 
 const authRoutes = require('./routes/auth');
 const stockRoutes = require('./routes/stock');
+const productRoutes = require('./routes/products');
+const transactionRoutes = require('./routes/transactions');
+const physicalCountRoutes = require('./routes/physicalCount');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -18,7 +21,9 @@ app.use(morgan('dev'));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/stock', stockRoutes);
-
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/transactions', transactionRoutes);
+app.use('/api/v1/physical-counts', physicalCountRoutes);
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', service: 'acdi-inventory-backend' });
 });

@@ -9,7 +9,8 @@ async function stockIn(req, res, next) {
       return apiResponse.validationError(res, errors.array());
     }
 
-    const { productId, quantity, performedBy, note } = req.body;
+    const { productId, quantity, note } = req.body;
+    const performedBy = req.user?.email || req.user?.sub || 'system';
     const result = await stockService.recordStockIn({ productId, quantity, performedBy, note });
     return apiResponse.success(res, result);
   } catch (err) {
@@ -24,7 +25,8 @@ async function stockOut(req, res, next) {
       return apiResponse.validationError(res, errors.array());
     }
 
-    const { productId, quantity, performedBy, note } = req.body;
+    const { productId, quantity, note } = req.body;
+    const performedBy = req.user?.email || req.user?.sub || 'system';
     const result = await stockService.recordStockOut({ productId, quantity, performedBy, note });
     return apiResponse.success(res, result);
   } catch (err) {

@@ -7,6 +7,26 @@ function buildReferenceNumber(type) {
   return `${type.toUpperCase()}-${timestamp}`;
 }
 
+function determineStockStatus(quantity, threshold) {
+  if (quantity === 0) {
+    return 'out-of-stock';
+  }
+
+  if (threshold <= 0) {
+    return 'ok';
+  }
+
+  if (quantity <= Math.max(1, Math.floor(threshold / 2))) {
+    return 'critical';
+  }
+
+  if (quantity <= threshold) {
+    return 'alert';
+  }
+
+  return 'ok';
+}
+
 async function recordStockIn({ productId, quantity, performedBy, note }) {
   if (!quantity || quantity <= 0) {
     const error = new Error('Quantity must be greater than zero');
@@ -22,7 +42,8 @@ async function recordStockIn({ productId, quantity, performedBy, note }) {
   }
 
   const updatedQuantity = product.quantity + quantity;
-  await productRepository.updateQuantity(productId, updatedQuantity);
+  const stockStatus = determineStockStatus(updatedQuantity, product.reorderThreshold);
+  const updatedProduct = await productRepository.updateQuantity(productId, updatedQuantity, stockStatus, performedBy);
 
   const transaction = await transactionRepository.createTransaction({
     product: productId,
@@ -34,7 +55,7 @@ async function recordStockIn({ productId, quantity, performedBy, note }) {
   });
 
   return {
-    product: { ...product, quantity: updatedQuantity },
+    product: updatedProduct,
     transaction,
   };
 }
@@ -60,7 +81,8 @@ async function recordStockOut({ productId, quantity, performedBy, note }) {
   }
 
   const updatedQuantity = product.quantity - quantity;
-  await productRepository.updateQuantity(productId, updatedQuantity);
+  const stockStatus = determineStockStatus(updatedQuantity, product.reorderThreshold);
+  const updatedProduct = await productRepository.updateQuantity(productId, updatedQuantity, stockStatus, performedBy);
 
   const transaction = await transactionRepository.createTransaction({
     product: productId,
@@ -72,7 +94,7 @@ async function recordStockOut({ productId, quantity, performedBy, note }) {
   });
 
   return {
-    product: { ...product, quantity: updatedQuantity },
+    product: updatedProduct,
     transaction,
   };
 }

@@ -19,6 +19,23 @@ const baseProduct = {
   reorderThreshold: 5,
 };
 
+async function getAuthHeader() {
+  const adminUser = {
+    name: 'Admin User',
+    email: 'admin@acdi.test',
+    password: 'securePassword',
+    role: 'admin',
+  };
+
+  await request(app).post('/api/v1/auth/register').send(adminUser);
+  const loginResponse = await request(app).post('/api/v1/auth/login').send({
+    email: adminUser.email,
+    password: adminUser.password,
+  });
+
+  return `Bearer ${loginResponse.body.data.token}`;
+}
+
 describe('Stock Transactions', () => {
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -80,10 +97,12 @@ describe('Stock Transactions', () => {
   });
 
   test('API should accept stock-in request and respond with success', async () => {
+    const authHeader = await getAuthHeader();
     const product = await productRepository.createProduct(baseProduct);
 
     const response = await request(app)
       .post('/api/v1/stock/stock-in')
+      .set('Authorization', authHeader)
       .send({
         productId: product._id,
         quantity: 2,
@@ -97,10 +116,12 @@ describe('Stock Transactions', () => {
   });
 
   test('API should reject invalid stock-out request', async () => {
+    const authHeader = await getAuthHeader();
     const product = await productRepository.createProduct(baseProduct);
 
     const response = await request(app)
       .post('/api/v1/stock/stock-out')
+      .set('Authorization', authHeader)
       .send({
         productId: product._id,
         quantity: 0,
