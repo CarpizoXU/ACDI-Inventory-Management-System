@@ -1,9 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/authSlice';
+import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
-  { label: 'Dashboard', to: '/' },
+  { label: 'Dashboard', to: '/dashboard' },
   { label: 'Inventory', to: '/inventory' },
   { label: 'Stock In', to: '/stock-in' },
   { label: 'Stock Out', to: '/stock-out' },
@@ -16,8 +15,8 @@ function SidebarLink({ label, to }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block rounded-2xl px-4 py-3 text-sm font-medium transition ${
-          isActive ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+        `block rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+          isActive ? 'bg-white/10 text-white' : 'text-slate-200 hover:bg-white/5 hover:text-white'
         }`
       }
     >
@@ -27,24 +26,23 @@ function SidebarLink({ label, to }) {
 }
 
 export default function Layout() {
-  const auth = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleLogout() {
-    dispatch(logout());
+    logout();
     navigate('/login');
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex min-h-screen">
-        <aside className="w-72 bg-white border-r border-slate-200 p-6 shadow-sm">
-          <div className="mb-10">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-xl font-bold text-white">AC</div>
+    <div className="min-h-screen bg-background">
+      <div className="flex min-h-screen flex-col lg:flex-row">
+        <aside className="w-full border-b border-white/10 bg-sidebar p-6 lg:w-72 lg:border-b-0 lg:border-r">
+          <div className="mb-8">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-bold text-white">AC</div>
             <div className="mt-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">ACDI IMS</p>
-              <p className="mt-2 text-xl font-semibold text-slate-900">Inventory</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-300">ACDI IMS</p>
+              <p className="mt-2 text-xl font-semibold text-white">General Services Unit</p>
             </div>
           </div>
 
@@ -54,30 +52,30 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="mt-10 border-t border-slate-200 pt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Signed in as</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{auth.user?.name || auth.user?.email}</p>
-            <p className="text-sm text-slate-500">{auth.user?.role}</p>
+          <div className="mt-10 rounded-2xl bg-white/5 p-4">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-300">Signed in as</p>
+            <p className="mt-2 text-sm font-semibold text-white">{user?.name || user?.email}</p>
+            <p className="text-sm text-slate-300">{user?.role}</p>
             <button
               onClick={handleLogout}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
             >
               Logout
             </button>
           </div>
         </aside>
 
-        <main className="flex-1 p-6">
-          <div className="mb-6 flex items-center justify-between gap-4">
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm text-slate-500">General Services Unit</p>
+              <p className="text-sm text-slate-500">Operations dashboard</p>
               <h1 className="text-3xl font-semibold text-slate-900">Inventory Management</h1>
             </div>
             <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700">👤</span>
               <div>
-                <p className="text-sm font-semibold text-slate-900">{auth.user?.name}</p>
-                <p className="text-xs text-slate-500">{auth.user?.role}</p>
+                <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
+                <p className="text-xs text-slate-500">{user?.role}</p>
               </div>
             </div>
           </div>

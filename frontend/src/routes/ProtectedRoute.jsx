@@ -1,12 +1,16 @@
-import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-export default function ProtectedRoute({ children }) {
-  const auth = useSelector((state) => state.auth);
+export default function ProtectedRoute({ children, adminOnly = false }) {
+  const { user, token } = useAuth();
   const location = useLocation();
 
-  if (!auth.token) {
+  if (!token || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (adminOnly && user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

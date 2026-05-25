@@ -28,4 +28,6 @@ const physicalCountSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('PhysicalCount', physicalCountSchema);
+const PhysicalCount = mongoose.models.PhysicalCount || mongoose.model('PhysicalCount', physicalCountSchema);
+
+module.exports = PhysicalCount;

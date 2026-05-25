@@ -3,7 +3,7 @@ import stockService from '../services/stockService';
 import transactionService from '../services/transactionService';
 import productService from '../services/productService';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useSelector } from 'react-redux';
+import { useAuth } from '../context/AuthContext';
 
 const initialForm = {
   productId: '',
@@ -19,7 +19,7 @@ export default function StockOutPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const user = useSelector((state) => state.auth.user);
+  const { user } = useAuth();
 
   async function loadData() {
     try {
