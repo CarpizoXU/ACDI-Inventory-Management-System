@@ -22,6 +22,7 @@ function App() {
         }
       >
         <Route index element={<DashboardPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="stock-in" element={<StockInPage />} />
         <Route path="stock-out" element={<StockOutPage />} />

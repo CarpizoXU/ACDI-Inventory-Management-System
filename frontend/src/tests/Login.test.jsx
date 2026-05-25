@@ -1,20 +1,19 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import store from '../store/store';
+import { AuthProvider } from '../context/AuthContext';
 import LoginPage from '../pages/Login';
 
 describe('LoginPage', () => {
   test('renders login heading', () => {
     render(
-      <Provider store={store}>
+      <AuthProvider>
         <MemoryRouter>
           <LoginPage />
         </MemoryRouter>
-      </Provider>,
+      </AuthProvider>,
     );
 
-    expect(screen.getByText(/ACDI Inventory Login/i)).toBeTruthy();
+    expect(screen.getByText(/General Services Unit/i)).toBeTruthy();
   });
 });
