@@ -69,6 +69,50 @@ describe('Stock Transactions', () => {
     expect(result.transaction.performedBy).toBe('staff.user');
   });
 
+  test('should persist stock-in and stock-out metadata fields', async () => {
+    const stockInProduct = await productRepository.createProduct(baseProduct);
+    const stockOutProduct = await productRepository.createProduct({
+      ...baseProduct,
+      quantity: 12,
+    });
+
+    const stockInResult = await stockService.recordStockIn({
+      productId: stockInProduct._id,
+      quantity: 3,
+      performedBy: 'Jane Doe',
+      vendor: 'Acme Supplies',
+      receivedBy: 'Warehouse A',
+      dateReceived: '2026-05-20',
+      voucherType: 'JV',
+      voucherNumber: 'JV-001',
+      note: 'Stock in for office supplies',
+    });
+
+    const stockOutResult = await stockService.recordStockOut({
+      productId: stockOutProduct._id,
+      quantity: 2,
+      performedBy: 'Jane Doe',
+      issuedTo: 'Engineering',
+      department: 'Operations',
+      dateIssued: '2026-05-21',
+      purpose: 'Project supplies',
+      note: 'Issued to internal team',
+    });
+
+    expect(stockInResult.transaction.vendor).toBe('Acme Supplies');
+    expect(stockInResult.transaction.receivedBy).toBe('Warehouse A');
+    expect(stockInResult.transaction.dateReceived.toISOString()).toBe(new Date('2026-05-20').toISOString());
+    expect(stockInResult.transaction.voucherType).toBe('JV');
+    expect(stockInResult.transaction.voucherNumber).toBe('JV-001');
+    expect(stockInResult.transaction.performedBy).toBe('Jane Doe');
+
+    expect(stockOutResult.transaction.issuedTo).toBe('Engineering');
+    expect(stockOutResult.transaction.department).toBe('Operations');
+    expect(stockOutResult.transaction.dateIssued.toISOString()).toBe(new Date('2026-05-21').toISOString());
+    expect(stockOutResult.transaction.purpose).toBe('Project supplies');
+    expect(stockOutResult.transaction.performedBy).toBe('Jane Doe');
+  });
+
   test('should record stock-out and decrease product quantity', async () => {
     const product = await productRepository.createProduct(baseProduct);
     const result = await stockService.recordStockOut({
