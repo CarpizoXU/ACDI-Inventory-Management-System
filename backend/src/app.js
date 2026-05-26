@@ -10,6 +10,7 @@ const productRoutes = require('./routes/products');
 const transactionRoutes = require('./routes/transactions');
 const physicalCountRoutes = require('./routes/physicalCount');
 const errorHandler = require('./middleware/errorHandler');
+const { isAllowedCorsOrigin } = require('./utils/network');
 
 const app = express();
 const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -17,7 +18,18 @@ const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: clientOrigin, credentials: true }));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (isAllowedCorsOrigin(origin) || origin === clientOrigin) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin || 'undefined'}`));
+    },
+    credentials: true,
+  }),
+);
 app.use(morgan('dev'));
 
 app.use('/api/v1/auth', authRoutes);

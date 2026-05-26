@@ -9,7 +9,9 @@ async function createPhysicalCount({ referenceNumber, countedBy, location, items
     notes,
     status: 'draft',
   });
-  return physicalCount.save().populate('items.product');
+
+  const saved = await physicalCount.save();
+  return PhysicalCount.findById(saved._id).populate('items.product');
 }
 
 async function getPhysicalCountById(id) {
