@@ -12,11 +12,12 @@ const physicalCountRoutes = require('./routes/physicalCount');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(morgan('dev'));
 
 app.use('/api/v1/auth', authRoutes);

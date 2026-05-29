@@ -28,12 +28,17 @@ This system supports:
 ## Getting Started
 
 1. Clone the repository.
-2. Install backend dependencies: `cd backend && npm install`
-3. Install frontend dependencies: `cd ../frontend && npm install`
-4. Configure `.env` files.
-5. Start MongoDB locally.
-6. Run backend: `npm run dev`.
-7. Run frontend: `npm run dev`.
+2. Configure `.env` files (see `backend/.env.example` and `frontend/.env.example`).
+3. Start MongoDB locally.
+4. Run both apps with the provided scripts:
+   - Backend + Frontend: `start-all.bat`
+   - Backend only: `start-backend.bat`
+   - Frontend only: `start-frontend.bat`
+
+Notes:
+- These scripts will automatically run `npm install` in backend/frontend if `node_modules` is missing.
+- Frontend typically runs at http://localhost:5173 and backend at http://localhost:5000.
+
 
 ## Project Structure
 

@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import productService from '../services/productService';
 import LoadingSpinner from '../components/LoadingSpinner';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+import api from '../services/api';
 
 export default function PhysicalCountPage() {
   const [products, setProducts] = useState([]);
@@ -75,7 +73,7 @@ export default function PhysicalCountPage() {
           notes: '',
         }));
 
-      const response = await axios.post(`${API_BASE_URL}/physical-counts/create`, {
+      const response = await api.post('/physical-counts/create', {
         location: location || 'Main Warehouse',
         items,
         notes,

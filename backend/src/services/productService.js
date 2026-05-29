@@ -35,6 +35,8 @@ async function createProduct(data) {
     quantity: data.quantity ?? 0,
     reorderThreshold: data.reorderThreshold ?? 0,
     unitPrice: data.unitPrice ?? 0,
+    voucherType: data.voucherType || '',
+    voucherNumber: data.voucherNumber || '',
     status: data.status || 'active',
     stockStatus: computeStockStatus(data.quantity ?? 0, data.reorderThreshold ?? 0),
     createdBy: data.createdBy || '',

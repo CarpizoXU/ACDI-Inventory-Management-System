@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +9,19 @@ html, body, #root {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
-  font-family: Inter, system-ui, sans-serif;
+  @apply bg-background text-slate-900;
+  font-family: 'Manrope', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'DM Sans', sans-serif;
+}
+
+* {
+  @apply border-slate-200;
 }

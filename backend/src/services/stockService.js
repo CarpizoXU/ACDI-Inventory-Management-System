@@ -27,7 +27,26 @@ function determineStockStatus(quantity, threshold) {
   return 'ok';
 }
 
-async function recordStockIn({ productId, quantity, performedBy, note }) {
+function normalizeDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function recordStockIn({
+  productId,
+  quantity,
+  performedBy,
+  note,
+  vendor,
+  receivedBy,
+  dateReceived,
+  voucherType,
+  voucherNumber,
+}) {
   if (!quantity || quantity <= 0) {
     const error = new Error('Quantity must be greater than zero');
     error.statusCode = 400;
@@ -51,7 +70,12 @@ async function recordStockIn({ productId, quantity, performedBy, note }) {
     quantity,
     referenceNumber: buildReferenceNumber('stock-in'),
     performedBy,
-    note,
+    note: note || '',
+    vendor: vendor || '',
+    receivedBy: receivedBy || '',
+    dateReceived: normalizeDate(dateReceived),
+    voucherType: voucherType || '',
+    voucherNumber: voucherNumber || '',
   });
 
   return {
@@ -60,7 +84,16 @@ async function recordStockIn({ productId, quantity, performedBy, note }) {
   };
 }
 
-async function recordStockOut({ productId, quantity, performedBy, note }) {
+async function recordStockOut({
+  productId,
+  quantity,
+  performedBy,
+  note,
+  issuedTo,
+  department,
+  dateIssued,
+  purpose,
+}) {
   if (!quantity || quantity <= 0) {
     const error = new Error('Quantity must be greater than zero');
     error.statusCode = 400;
@@ -90,7 +123,11 @@ async function recordStockOut({ productId, quantity, performedBy, note }) {
     quantity,
     referenceNumber: buildReferenceNumber('stock-out'),
     performedBy,
-    note,
+    note: note || '',
+    issuedTo: issuedTo || '',
+    department: department || '',
+    dateIssued: normalizeDate(dateIssued),
+    purpose: purpose || '',
   });
 
   return {

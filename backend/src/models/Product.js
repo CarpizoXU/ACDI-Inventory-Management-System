@@ -15,6 +15,8 @@ const productSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, default: 0, min: 0 },
     reorderThreshold: { type: Number, required: true, default: 0, min: 0 },
     unitPrice: { type: Number, default: 0, min: 0 },
+    voucherType: { type: String, enum: ['JV', 'CV', ''], default: '' },
+    voucherNumber: { type: String, trim: true, default: '' },
     stockStatus: {
       type: String,
       enum: ['ok', 'alert', 'critical', 'out-of-stock'],
@@ -28,4 +30,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model('Product', productSchema);
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+
+module.exports = Product;
