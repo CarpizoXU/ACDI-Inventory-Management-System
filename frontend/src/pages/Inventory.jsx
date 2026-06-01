@@ -3,6 +3,16 @@ import productService from '../services/productService';
 import transactionService from '../services/transactionService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
+import {
+  applyDateFilter,
+  computeInventoryStatus,
+  createInventoryWorksheet,
+  createWorkbook,
+  downloadWorkbook,
+  getSheetRows,
+  parseInventoryImportRows,
+  readWorkbook,
+} from '../utils/excelUtils';
 
 const initialForm = {
   name: '',
@@ -44,8 +54,42 @@ function formatNumber(value) {
 }
 
 function formatDate(value) {
-  if (!value) return '—';
+  if (!value) {
+    return '—';
+  }
+
   return new Date(value).toLocaleString();
+}
+
+function getStatusLabel(stockStatus) {
+  if (stockStatus === 'alert') {
+    return 'Low';
+  }
+
+  if (stockStatus === 'critical' || stockStatus === 'out-of-stock') {
+    return 'Critical';
+  }
+
+  return 'Good';
+}
+
+function getApiErrorMessage(err) {
+  const responseData = err?.response?.data;
+
+  if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+    const firstError = responseData.errors[0];
+    return firstError?.msg || firstError?.message || responseData.message || 'Unable to process the request';
+  }
+
+  if (typeof responseData?.message === 'string' && responseData.message.trim()) {
+    return responseData.message;
+  }
+
+  if (typeof err?.message === 'string' && err.message.trim()) {
+    return err.message;
+  }
+
+  return 'Unable to process the request';
 }
 
 export default function InventoryPage() {
@@ -53,6 +97,11 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [unitFilter, setUnitFilter] = useState('');
+  const [sortBy, setSortBy] = useState('updatedAt');
+  const [dateRange, setDateRange] = useState('All');
+  const [importing, setImporting] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -67,13 +116,47 @@ export default function InventoryPage() {
     return [...new Set(products.map((item) => item.category).filter(Boolean))];
   }, [products]);
 
+  const units = useMemo(() => {
+    return [...new Set(products.map((item) => item.unit).filter(Boolean))];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const filtered = products.filter((product) => {
+      const matchesSearch = !normalizedSearch || product.name?.toLowerCase().includes(normalizedSearch);
+      const matchesCategory = !category || product.category === category;
+      const matchesStatus = !statusFilter || getStatusLabel(product.stockStatus) === statusFilter;
+      const matchesUnit = !unitFilter || product.unit === unitFilter;
+      const matchesDate = applyDateFilter(product.updatedAt, dateRange);
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesUnit && matchesDate;
+    });
+
+    const sorted = [...filtered];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'quantity') {
+      sorted.sort((a, b) => Number(a.quantity || 0) - Number(b.quantity || 0));
+    } else {
+      sorted.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    }
+
+    return sorted;
+  }, [products, search, category, statusFilter, unitFilter, sortBy, dateRange]);
+
   async function loadProducts() {
     try {
       setLoading(true);
-      const response = await productService.listProducts({ search, category, limit: 50 });
+      const response = await productService.listProducts({
+        search,
+        category,
+        stockStatus: statusFilter === '' ? undefined : statusFilter === 'Good' ? 'ok' : statusFilter === 'Low' ? 'alert' : 'critical',
+        limit: 100,
+      });
       setProducts(response.data.data.products || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load products');
+      setError(getApiErrorMessage(err) || 'Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -93,7 +176,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadProducts();
-  }, [search, category]);
+  }, [search, category, statusFilter]);
 
   function openCreateModal() {
     setError('');
@@ -140,6 +223,71 @@ export default function InventoryPage() {
       ...current,
       [field]: field === 'unitPrice' ? clampNonNegative(value) : Math.floor(clampNonNegative(value)),
     }));
+  }
+
+  async function handleExportInventory() {
+    const workbook = createWorkbook();
+    createInventoryWorksheet(workbook, products);
+    await downloadWorkbook(workbook, `ACDI_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }
+
+  async function handleImportInventory(event) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setError('');
+      setSuccess('');
+
+      const workbook = await readWorkbook(file);
+      const rows = getSheetRows(workbook, 'Inventory');
+      const parsedRows = parseInventoryImportRows(rows);
+
+      if (!parsedRows.length) {
+        throw new Error('No importable rows were found in the workbook.');
+      }
+
+      let createdCount = 0;
+      let updatedCount = 0;
+
+      for (const row of parsedRows) {
+        if (!row.name || !row.category || !row.unit) {
+          throw new Error('Each imported row must include a name, category, and unit.');
+        }
+
+        const match = products.find((product) => {
+          return product.name?.toLowerCase() === row.name.toLowerCase() && product.category?.toLowerCase() === row.category.toLowerCase();
+        });
+
+        const payload = {
+          ...row,
+          quantity: Math.floor(clampNonNegative(row.quantity)),
+          reorderThreshold: Math.floor(clampNonNegative(row.reorderThreshold)),
+          unitPrice: clampNonNegative(row.unitPrice),
+          notes: row.notes || '',
+          status: 'active',
+        };
+
+        if (match?._id) {
+          await productService.updateProduct(match._id, payload);
+          updatedCount += 1;
+        } else {
+          await productService.createProduct(payload);
+          createdCount += 1;
+        }
+      }
+
+      setSuccess(`Imported inventory successfully. Created ${createdCount} item(s) and updated ${updatedCount} item(s).`);
+      await loadProducts();
+    } catch (err) {
+      setError(getApiErrorMessage(err) || 'Unable to import inventory data');
+    } finally {
+      setImporting(false);
+      event.target.value = '';
+    }
   }
 
   async function handleSubmit(event) {
@@ -189,9 +337,9 @@ export default function InventoryPage() {
       setForm(initialForm);
       setEditingProduct(null);
       setIsModalOpen(false);
-      loadProducts();
+      await loadProducts();
     } catch (err) {
-      setError(err.response?.data?.message || (modalMode === 'edit' ? 'Unable to update product' : 'Unable to add product'));
+      setError(getApiErrorMessage(err) || (modalMode === 'edit' ? 'Unable to update product' : 'Unable to add product'));
     }
   }
 
@@ -206,52 +354,110 @@ export default function InventoryPage() {
       setSuccess('');
       await productService.archiveProduct(productId);
       setSuccess('Product deleted successfully');
-      loadProducts();
+      await loadProducts();
     } catch (err) {
-      setError(err.response?.data?.message || 'Unable to delete product');
+      setError(getApiErrorMessage(err) || 'Unable to delete product');
     }
   }
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-slate-500">Inventory list</p>
           <h2 className="text-xl font-semibold text-slate-900">Product catalog</h2>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"
-        >
-          + Add New Product
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleExportInventory}
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700"
+          >
+            Export Excel
+          </button>
+          <label className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700">
+            <span>{importing ? 'Importing…' : 'Import Excel'}</span>
+            <input
+              type="file"
+              accept=".xlsx,.xlsm,.xls"
+              onChange={handleImportInventory}
+              className="hidden"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"
+          >
+            + Add New Product
+          </button>
+        </div>
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr_1fr]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search items..."
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 sm:w-72"
+          placeholder="Search by item name"
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 sm:w-56"
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
         >
           <option value="">All Categories</option>
           {categories.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+        >
+          <option value="">All Status</option>
+          <option value="Good">Good</option>
+          <option value="Low">Low</option>
+          <option value="Critical">Critical</option>
+        </select>
+        <select
+          value={unitFilter}
+          onChange={(e) => setUnitFilter(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+        >
+          <option value="">All Units</option>
+          {units.map((option) => (
+            <option key={option} value={option}>{option}</option>
           ))}
         </select>
       </div>
 
-      {success && <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
-      {error && <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+      <div className="grid gap-3 md:grid-cols-2">
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+        >
+          <option value="updatedAt">Sort by Last Updated</option>
+          <option value="name">Sort by Name A–Z</option>
+          <option value="quantity">Sort by Quantity (Low to High)</option>
+        </select>
+        <select
+          value={dateRange}
+          onChange={(e) => setDateRange(e.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+        >
+          <option value="All">All Dates</option>
+          <option value="This Week">This Week</option>
+          <option value="This Month">This Month</option>
+          <option value="This Year">This Year</option>
+        </select>
+      </div>
+
+      {success && <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
+      {error && <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
 
       {loading ? (
         <LoadingSpinner />
@@ -270,7 +476,7 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <tr key={product._id} className="hover:bg-slate-50">
                   <td className="px-6 py-4">
                     <button
@@ -287,16 +493,14 @@ export default function InventoryPage() {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        product.stockStatus === 'critical'
+                        product.stockStatus === 'critical' || product.stockStatus === 'out-of-stock'
                           ? 'bg-rose-100 text-rose-700'
                           : product.stockStatus === 'alert'
                           ? 'bg-amber-100 text-amber-700'
-                          : product.stockStatus === 'out-of-stock'
-                          ? 'bg-rose-100 text-rose-700'
                           : 'bg-emerald-100 text-emerald-700'
                       }`}
                     >
-                      {product.stockStatus.replace('-', ' ').toUpperCase()}
+                      {getStatusLabel(product.stockStatus)}
                     </span>
                   </td>
                   <td className="px-6 py-4">{new Date(product.updatedAt).toLocaleDateString()}</td>
@@ -329,7 +533,7 @@ export default function InventoryPage() {
               ))}
             </tbody>
           </table>
-          {products.length === 0 && (
+          {filteredProducts.length === 0 && (
             <div className="p-8 text-center text-sm text-slate-500">No products found.</div>
           )}
         </div>
@@ -449,19 +653,8 @@ export default function InventoryPage() {
           </label>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"
-            >
-              {modalMode === 'edit' ? 'Save Changes' : 'Add Product'}
-            </button>
+            <button type="button" onClick={closeModal} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+            <button type="submit" className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700">{modalMode === 'edit' ? 'Save Changes' : 'Add Product'}</button>
           </div>
         </form>
       </Modal>
@@ -492,7 +685,7 @@ export default function InventoryPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p>
-                <p className="mt-1 text-sm text-slate-800">{detailsProduct.stockStatus?.replace('-', ' ').toUpperCase()}</p>
+                <p className="mt-1 text-sm text-slate-800">{getStatusLabel(detailsProduct.stockStatus)}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Voucher</p>

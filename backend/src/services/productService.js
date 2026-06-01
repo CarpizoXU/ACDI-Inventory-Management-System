@@ -20,9 +20,37 @@ function computeStockStatus(quantity, threshold) {
   return 'ok';
 }
 
+function normalizeProductName(value) {
+  return String(value || '').trim();
+}
+
+async function ensureUniqueProductName(name, currentId = null) {
+  const trimmedName = normalizeProductName(name);
+  if (!trimmedName) {
+    return;
+  }
+
+  const existingProduct = await productRepository.findByName(trimmedName);
+  if (!existingProduct) {
+    return;
+  }
+
+  if (currentId && existingProduct._id?.toString() === currentId.toString()) {
+    return;
+  }
+
+  const error = new Error('An item with this name already exists');
+  error.statusCode = 409;
+  throw error;
+}
+
 async function createProduct(data) {
+  const name = normalizeProductName(data.name);
+
+  await ensureUniqueProductName(name);
+
   const payload = {
-    name: data.name,
+    name,
     sku: data.sku,
     brand: data.brand,
     category: data.category,
@@ -68,11 +96,15 @@ async function updateProduct(id, updates) {
     throw error;
   }
 
+  const nextName = updates.name != null ? normalizeProductName(updates.name) : existing.name;
+  await ensureUniqueProductName(nextName, id);
+
   const quantity = updates.quantity != null ? updates.quantity : existing.quantity;
   const threshold = updates.reorderThreshold != null ? updates.reorderThreshold : existing.reorderThreshold;
 
   const payload = {
     ...updates,
+    name: nextName,
     stockStatus: computeStockStatus(quantity, threshold),
   };
 

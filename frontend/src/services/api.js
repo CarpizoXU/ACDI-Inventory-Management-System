@@ -1,7 +1,28 @@
 import axios from 'axios';
 
+function resolveApiBaseUrl() {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  if (typeof window !== 'undefined') {
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || 5000;
+    const host = window.location.hostname;
+
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return `http://localhost:${backendPort}/api/v1`;
+    }
+
+    return `http://${host}:${backendPort}/api/v1`;
+  }
+
+  return `http://localhost:${import.meta.env.VITE_BACKEND_PORT || 5000}/api/v1`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: resolveApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });

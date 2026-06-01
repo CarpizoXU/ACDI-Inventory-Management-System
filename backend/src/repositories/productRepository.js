@@ -1,5 +1,9 @@
 const Product = require('../models/Product');
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 async function createProduct(productData) {
   const product = new Product(productData);
   return product.save();
@@ -40,6 +44,18 @@ async function findById(id) {
   return Product.findOne({ _id: id, deletedAt: null }).lean();
 }
 
+async function findByName(name) {
+  const normalized = String(name || '').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  return Product.findOne({
+    deletedAt: null,
+    name: { $regex: `^${escapeRegExp(normalized)}$`, $options: 'i' },
+  }).lean();
+}
+
 async function updateProduct(id, updateData) {
   return Product.findByIdAndUpdate(
     id,
@@ -68,6 +84,7 @@ module.exports = {
   createProduct,
   listProducts,
   findById,
+  findByName,
   updateProduct,
   archiveProduct,
   updateQuantity,
