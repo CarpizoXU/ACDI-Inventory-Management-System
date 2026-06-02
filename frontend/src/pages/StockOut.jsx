@@ -47,6 +47,10 @@ export default function StockOutPage() {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
+  const departments = useMemo(() => {
+    return [...new Set(transactions.map((item) => item.department).filter(Boolean))];
+  }, [transactions]);
+
   const selectedProduct = useMemo(
     () => products.find((product) => product._id === form.productId),
     [products, form.productId],
@@ -235,6 +239,7 @@ export default function StockOutPage() {
               {products.map((product) => (
                 <option key={product._id} value={product._id}>
                   {product.name}
+                  {product.brand || product.vendor ? ` — ${[product.brand, product.vendor].filter(Boolean).join(' / ')}` : ''}
                 </option>
               ))}
             </select>
@@ -266,11 +271,20 @@ export default function StockOutPage() {
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Department
-              <input
-                value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value })}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
-              />
+              <div className="relative mt-2">
+                <input
+                  list="department-options"
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
+                  placeholder="Select or type new department"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+                />
+                <datalist id="department-options">
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept} />
+                  ))}
+                </datalist>
+              </div>
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Date Issued

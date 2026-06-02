@@ -145,6 +145,8 @@ function createInventoryWorksheet(workbook, products) {
     { header: 'Quantity', key: 'quantity', width: 12 },
     { header: 'Min Threshold', key: 'reorderThreshold', width: 16 },
     { header: 'Unit Price', key: 'unitPrice', width: 14 },
+    { header: 'Voucher Type', key: 'voucherType', width: 14 },
+    { header: 'Voucher Number', key: 'voucherNumber', width: 16 },
     { header: 'Notes', key: 'notes', width: 28 },
     { header: 'Status', key: 'status', width: 14 },
     { header: 'Actual Count', key: 'actualCount', width: 14 },
@@ -161,6 +163,8 @@ function createInventoryWorksheet(workbook, products) {
       quantity: product.quantity || 0,
       reorderThreshold: product.reorderThreshold || 0,
       unitPrice: product.unitPrice || 0,
+      voucherType: product.voucherType || '',
+      voucherNumber: product.voucherNumber || '',
       notes: product.notes || '',
       status: computeInventoryStatus(product.quantity || 0, product.reorderThreshold || 0),
       actualCount: '',
@@ -308,6 +312,8 @@ function parseInventoryImportRows(rows) {
       const threshold = convertNumber(row['min threshold'] || row['reorder threshold'] || row['threshold']);
       const unitPrice = convertNumber(row['unit price'] || row['unitprice']);
       const notes = normalizeText(row.notes || row['note']);
+      const voucherType = normalizeText(row['voucher type'] || row['vouchertype'] || '');
+      const voucherNumber = normalizeText(row['voucher number'] || row['vouchernumber'] || '');
 
       return {
         name,
@@ -319,6 +325,8 @@ function parseInventoryImportRows(rows) {
         reorderThreshold: threshold,
         unitPrice,
         notes,
+        voucherType,
+        voucherNumber,
         status: computeInventoryStatus(quantity, threshold),
       };
     });
