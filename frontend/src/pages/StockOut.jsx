@@ -224,8 +224,9 @@ export default function StockOutPage() {
           {error && <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
 
           <label className="block text-sm font-medium text-slate-700">
-            Item Name *
+            Item Name
             <select
+              required
               value={form.productId}
               onChange={(e) => setForm({ ...form, productId: e.target.value })}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
@@ -244,8 +245,9 @@ export default function StockOutPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">
-              Quantity *
+              Quantity
               <input
+                required
                 type="number"
                 min="1"
                 step="1"

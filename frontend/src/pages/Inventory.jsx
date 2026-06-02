@@ -20,9 +20,9 @@ const initialForm = {
   brand: '',
   vendor: '',
   unit: 'pcs',
-  unitPrice: 0,
-  quantity: 0,
-  reorderThreshold: 0,
+  unitPrice: '',
+  quantity: '',
+  reorderThreshold: '',
   voucherType: '',
   voucherNumber: '',
   notes: '',
@@ -198,9 +198,9 @@ export default function InventoryPage() {
       brand: product.brand || '',
       vendor: product.vendor || '',
       unit: product.unit || 'pcs',
-      unitPrice: clampNonNegative(product.unitPrice),
-      quantity: clampNonNegative(product.quantity),
-      reorderThreshold: clampNonNegative(product.reorderThreshold),
+      unitPrice: String(clampNonNegative(product.unitPrice)),
+      quantity: String(clampNonNegative(product.quantity)),
+      reorderThreshold: String(clampNonNegative(product.reorderThreshold)),
       voucherType: product.voucherType || '',
       voucherNumber: product.voucherNumber || '',
       notes: product.notes || '',
@@ -219,10 +219,18 @@ export default function InventoryPage() {
   }
 
   function handleNumericChange(field, value) {
-    setForm((current) => ({
-      ...current,
-      [field]: field === 'unitPrice' ? clampNonNegative(value) : Math.floor(clampNonNegative(value)),
-    }));
+    // allow clearing the input while enforcing non-negative numeric values otherwise
+    if (value === '' || value === null) {
+      setForm((current) => ({ ...current, [field]: '' }));
+      return;
+    }
+
+    if (field === 'unitPrice') {
+      setForm((current) => ({ ...current, [field]: clampNonNegative(value) }));
+    } else {
+      const parsed = Math.floor(clampNonNegative(value));
+      setForm((current) => ({ ...current, [field]: Number.isFinite(parsed) ? parsed : 0 }));
+    }
   }
 
   async function handleExportInventory() {
