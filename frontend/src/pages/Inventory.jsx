@@ -569,11 +569,20 @@ export default function InventoryPage() {
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Category
-              <input
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
-              />
+              <div className="relative mt-2">
+                <input
+                  list="category-options"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  placeholder="Select or type new category"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+                />
+                <datalist id="category-options">
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
+              </div>
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Brand
@@ -593,11 +602,20 @@ export default function InventoryPage() {
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Unit
-              <input
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
-              />
+              <div className="relative mt-2">
+                <input
+                  list="unit-options"
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  placeholder="Select or type new unit"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
+                />
+                <datalist id="unit-options">
+                  {units.map((unit) => (
+                    <option key={unit} value={unit} />
+                  ))}
+                </datalist>
+              </div>
             </label>
             <label className="block text-sm font-medium text-slate-700">
               Unit Price

@@ -236,6 +236,7 @@ export default function StockInPage() {
               {products.map((product) => (
                 <option key={product._id} value={product._id}>
                   {product.name}
+                  {product.brand || product.vendor ? ` — ${[product.brand, product.vendor].filter(Boolean).join(' / ')}` : ''}
                 </option>
               ))}
             </select>

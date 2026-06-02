@@ -24,6 +24,33 @@ async function createDefaultAdmin() {
     role: 'admin',
   });
 
+
+  // Create two additional admin accounts requested by the user if they don't exist
+  try {
+    const extraAccounts = [
+      { email: 'user1@acdi.local', password: 'Acdi1Coffee', name: 'User One' },
+      { email: 'user2@acdi.local', password: 'Acdi2Winter', name: 'User Two' },
+    ];
+
+    for (const acct of extraAccounts) {
+      const exists = await userRepository.findByEmail(acct.email);
+      if (exists) {
+        console.log(`Account already exists: ${acct.email}`);
+        continue;
+      }
+
+      await authService.registerUser({
+        name: acct.name,
+        email: acct.email,
+        password: acct.password,
+        role: 'admin',
+      });
+
+      console.log(`Created admin account: ${acct.email}`);
+    }
+  } catch (err) {
+    console.warn('Failed to create extra admin accounts:', err.message || err);
+  }
   console.log(`Default admin account created: ${adminEmail}`);
 }
 
