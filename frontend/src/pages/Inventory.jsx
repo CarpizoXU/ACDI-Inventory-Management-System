@@ -560,7 +560,7 @@ export default function InventoryPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">
-              Item Name
+              Item Name *
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -568,7 +568,7 @@ export default function InventoryPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Category
+              Category *
               <div className="relative mt-2">
                 <input
                   list="category-options"
@@ -593,7 +593,7 @@ export default function InventoryPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Vendor
+              Vendor *
               <input
                 value={form.vendor}
                 onChange={(e) => setForm({ ...form, vendor: e.target.value })}
@@ -601,7 +601,7 @@ export default function InventoryPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Unit
+              Unit *
               <div className="relative mt-2">
                 <input
                   list="unit-options"
@@ -618,7 +618,7 @@ export default function InventoryPage() {
               </div>
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Unit Price
+              Unit Price *
               <input
                 type="number"
                 min="0"
@@ -629,7 +629,7 @@ export default function InventoryPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Quantity
+              Quantity *
               <input
                 type="number"
                 min="0"
@@ -640,7 +640,7 @@ export default function InventoryPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Threshold
+              Threshold *
               <input
                 type="number"
                 min="0"
@@ -653,7 +653,7 @@ export default function InventoryPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-700">Voucher reference</p>
+            <p className="text-sm font-medium text-slate-700">Voucher Reference *</p>
             <div className="mt-2 flex flex-wrap gap-3">
               {['JV', 'CV'].map((type) => (
                 <label key={type} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700">

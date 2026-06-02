@@ -14,15 +14,18 @@ async function createDefaultAdmin() {
   const existingAdmin = await userRepository.findByEmail(adminEmail);
   if (existingAdmin) {
     console.log(`Default admin already exists: ${adminEmail}`);
-    return;
+    // continue to ensure extra admin accounts are present
   }
 
-  await authService.registerUser({
-    name: adminName,
-    email: adminEmail,
-    password: adminPassword,
-    role: 'admin',
-  });
+  if (!existingAdmin) {
+    await authService.registerUser({
+      name: adminName,
+      email: adminEmail,
+      password: adminPassword,
+      role: 'admin',
+    });
+    console.log(`Default admin account created: ${adminEmail}`);
+  }
 
 
   // Create two additional admin accounts requested by the user if they don't exist
@@ -33,25 +36,29 @@ async function createDefaultAdmin() {
     ];
 
     for (const acct of extraAccounts) {
-      const exists = await userRepository.findByEmail(acct.email);
-      if (exists) {
-        console.log(`Account already exists: ${acct.email}`);
-        continue;
+      try {
+        const exists = await userRepository.findByEmail(acct.email);
+        if (exists) {
+          console.log(`Account already exists: ${acct.email}`);
+          continue;
+        }
+
+        await authService.registerUser({
+          name: acct.name,
+          email: acct.email,
+          password: acct.password,
+          role: 'admin',
+        });
+
+        console.log(`Created admin account: ${acct.email}`);
+      } catch (acctErr) {
+        console.warn(`Failed to create account ${acct.email}:`, acctErr.message || acctErr);
+        // continue with next account
       }
-
-      await authService.registerUser({
-        name: acct.name,
-        email: acct.email,
-        password: acct.password,
-        role: 'admin',
-      });
-
-      console.log(`Created admin account: ${acct.email}`);
     }
   } catch (err) {
     console.warn('Failed to create extra admin accounts:', err.message || err);
   }
-  console.log(`Default admin account created: ${adminEmail}`);
 }
 
 module.exports = {
