@@ -101,6 +101,31 @@ async function reconcilePhysicalCount(id, reconciledBy) {
     throw error;
   }
 
+  // Apply quantity adjustments to products based on physical count variance
+  for (const item of physicalCount.items) {
+    if (item.variance !== 0) {
+      const product = await productRepository.findById(item.product);
+      if (product) {
+        const newQuantity = product.quantity + item.variance;
+        // Determine stock status
+        const statusMap = {
+          'out-of-stock': newQuantity === 0,
+          'critical': newQuantity > 0 && newQuantity <= Math.max(1, Math.floor(product.reorderThreshold / 2)),
+          'alert': newQuantity > Math.max(1, Math.floor(product.reorderThreshold / 2)) && newQuantity <= product.reorderThreshold,
+          'ok': newQuantity > product.reorderThreshold,
+        };
+        
+        let stockStatus = 'ok';
+        if (newQuantity === 0) stockStatus = 'out-of-stock';
+        else if (product.reorderThreshold > 0 && newQuantity <= Math.max(1, Math.floor(product.reorderThreshold / 2))) stockStatus = 'critical';
+        else if (product.reorderThreshold > 0 && newQuantity <= product.reorderThreshold) stockStatus = 'alert';
+        
+        // Use updateQuantity which sets lastStockMovementDate
+        await productRepository.updateQuantity(item.product, newQuantity, stockStatus, reconciledBy);
+      }
+    }
+  }
+
   return {
     ...physicalCount.toObject(),
     totalVariance: calculateTotalVariance(physicalCount.items),

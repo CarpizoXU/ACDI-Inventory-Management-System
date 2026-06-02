@@ -475,11 +475,12 @@ export default function InventoryPage() {
             <thead className="bg-slate-50">
               <tr>
                 <th className="px-6 py-4 font-semibold">Item Name</th>
+                <th className="px-6 py-4 font-semibold">Brand</th>
                 <th className="px-6 py-4 font-semibold">Category</th>
                 <th className="px-6 py-4 font-semibold">Quantity</th>
                 <th className="px-6 py-4 font-semibold">Threshold</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold">Updated</th>
+                <th className="px-6 py-4 font-semibold">Last Movement</th>
                 <th className="px-6 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -495,6 +496,7 @@ export default function InventoryPage() {
                       {product.name}
                     </button>
                   </td>
+                  <td className="px-6 py-4">{product.brand || '—'}</td>
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4">{product.quantity} {product.unit}</td>
                   <td className="px-6 py-4">{product.reorderThreshold}</td>
@@ -511,7 +513,11 @@ export default function InventoryPage() {
                       {getStatusLabel(product.stockStatus)}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{new Date(product.updatedAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-4">
+                    {product.lastStockMovementDate
+                      ? new Date(product.lastStockMovementDate).toLocaleDateString()
+                      : 'No Movement'}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -700,8 +706,38 @@ export default function InventoryPage() {
                 <p className="mt-1 text-sm text-slate-800">{detailsProduct.voucherType || '—'} {detailsProduct.voucherNumber || ''}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Brand / Vendor</p>
-                <p className="mt-1 text-sm text-slate-800">{detailsProduct.brand || '—'} / {detailsProduct.vendor || '—'}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Brand</p>
+                <p className="mt-1 text-sm text-slate-800">{detailsProduct.brand || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Supplier</p>
+                <p className="mt-1 text-sm text-slate-800">{detailsProduct.supplier || detailsProduct.vendor || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Date Received</p>
+                <p className="mt-1 text-sm text-slate-800">{detailsProduct.dateReceived ? formatDate(detailsProduct.dateReceived) : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Last Stock Movement</p>
+                <p className="mt-1 text-sm text-slate-800">
+                  {detailsProduct.lastStockMovementDate ? formatDate(detailsProduct.lastStockMovementDate) : 'No Movement'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Created By</p>
+                <p className="mt-1 text-sm text-slate-800">{detailsProduct.createdBy || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Created Date</p>
+                <p className="mt-1 text-sm text-slate-800">{formatDate(detailsProduct.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Updated By</p>
+                <p className="mt-1 text-sm text-slate-800">{detailsProduct.updatedBy || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Updated Date</p>
+                <p className="mt-1 text-sm text-slate-800">{formatDate(detailsProduct.updatedAt)}</p>
               </div>
             </div>
 

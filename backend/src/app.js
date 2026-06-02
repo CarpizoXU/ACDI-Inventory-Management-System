@@ -28,6 +28,9 @@ app.use(
       return callback(new Error(`CORS blocked for origin: ${origin || 'undefined'}`));
     },
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   }),
 );
 app.use(morgan('dev'));

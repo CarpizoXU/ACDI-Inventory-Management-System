@@ -25,6 +25,7 @@ const productSchema = new mongoose.Schema(
     status: { type: String, enum: ['active', 'archived'], default: 'active' },
     createdBy: { type: String, trim: true, default: '' },
     updatedBy: { type: String, trim: true, default: '' },
+    lastStockMovementDate: { type: Date, default: null },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true },

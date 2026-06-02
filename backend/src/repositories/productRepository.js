@@ -75,7 +75,7 @@ async function archiveProduct(id) {
 async function updateQuantity(id, quantity, stockStatus, updatedBy) {
   return Product.findByIdAndUpdate(
     id,
-    { $set: { quantity, stockStatus, updatedBy } },
+    { $set: { quantity, stockStatus, updatedBy, lastStockMovementDate: new Date() } },
     { new: true, runValidators: true },
   ).lean();
 }
