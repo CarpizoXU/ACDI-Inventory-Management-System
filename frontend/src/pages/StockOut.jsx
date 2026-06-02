@@ -228,7 +228,7 @@ export default function StockOutPage() {
           {error && <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
 
           <label className="block text-sm font-medium text-slate-700">
-            Item Name
+            Item Name *
             <select
               required
               value={form.productId}
@@ -250,7 +250,7 @@ export default function StockOutPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">
-              Quantity
+              Quantity *
               <input
                 required
                 type="number"
@@ -262,7 +262,7 @@ export default function StockOutPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Issued To
+              Issued To *
               <input
                 value={form.issuedTo}
                 onChange={(e) => setForm({ ...form, issuedTo: e.target.value })}
@@ -270,13 +270,13 @@ export default function StockOutPage() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Department
+              Department *
               <div className="relative mt-2">
                 <input
                   list="department-options"
                   value={form.department}
                   onChange={(e) => setForm({ ...form, department: e.target.value })}
-                  placeholder="Select or type new department"
+                  placeholder="Select department"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
                 />
                 <datalist id="department-options">
@@ -287,7 +287,7 @@ export default function StockOutPage() {
               </div>
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Date Issued
+              Date Issued *
               <input
                 type="date"
                 value={form.dateIssued}
