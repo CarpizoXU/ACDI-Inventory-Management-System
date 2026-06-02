@@ -1,71 +1,88 @@
 @echo off
+setlocal EnableDelayedExpansion
+
 title ACDI Inventory System - Automated Defense Setup
+
 echo ===================================================
 echo   ACDI INVENTORY SYSTEM - PROFESSOR DEPLOYMENT
 echo ===================================================
 echo.
 
-:: 1. Check if Node.js is installed
+:: Check Node.js
 node -v >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo [!] Node.js is missing on this computer.
-    echo [*] Downloading and installing Node.js automatically...
-    winget install OpenJS.NodeJS -e --silent --accept-source-agreements --accept-package-agreements
+
+if errorlevel 1 (
+    echo [ERROR] Node.js is not installed.
     echo.
-    echo [!] Node.js installed! PLEASE CLOSE THIS WINDOW AND DOUBLE CLICK THIS FILE AGAIN.
+    echo Please install Node.js:
+    echo https://nodejs.org
     pause
-    exit
-) ELSE (
-    echo [OK] Node.js is installed.
+    exit /b 1
 )
 
-:: 2. Check and Install Backend Dependencies
+echo [OK] Node.js is installed.
 echo.
+
+:: Backend
 echo [*] Checking Backend Dependencies...
-cd backend
-IF EXIST "node_modules\" (
-    echo [OK] Backend modules already installed! Skipping...
-) ELSE (
-    echo [*] Installing Backend Node Modules (this might take a minute)...
-    call npm install
-)
-cd ..
 
-:: 3. Check and Install Frontend Dependencies
+if exist "backend\node_modules" (
+    echo [OK] Backend modules already installed.
+) else (
+    echo [*] Installing Backend Node Modules...
+    cd /d backend
+    call npm install
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] Backend installation failed.
+        pause
+        exit /b 1
+    )
+    cd ..
+)
+
 echo.
+
+:: Frontend
 echo [*] Checking Frontend Dependencies...
-cd frontend
-IF EXIST "node_modules\" (
-    echo [OK] Frontend modules already installed! Skipping...
-) ELSE (
-    echo [*] Installing Frontend Node Modules (this might take a minute)...
+
+if exist "frontend\node_modules" (
+    echo [OK] Frontend modules already installed.
+) else (
+    echo [*] Installing Frontend Node Modules...
+    cd /d frontend
     call npm install
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] Frontend installation failed.
+        pause
+        exit /b 1
+    )
+    cd ..
 )
-cd ..
 
-:: 4. Start the Application
 echo.
-echo [*] All dependencies are ready! Starting the servers...
+echo [*] Starting Backend...
 
-:: Start Backend in background
-start "ACDI Backend" /b cmd /c "cd backend && npm run dev"
+start "ACDI Backend" cmd /k "cd /d %~dp0backend && npm run dev"
 
-:: Wait 3 seconds for database connection
-timeout /t 3 /nobreak >nul
+timeout /t 5 /nobreak >nul
 
-:: Start Frontend in background
-start "ACDI Frontend" /b cmd /c "cd frontend && npm run dev"
+echo.
+echo [*] Starting Frontend...
 
-:: Wait 2 seconds for Vite
-timeout /t 2 /nobreak >nul
+start "ACDI Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
-:: Open Professor's Browser automatically
-start http://localhost:5173/
+timeout /t 5 /nobreak >nul
+
+echo.
+echo [*] Opening Browser...
+
+start http://localhost:5173
 
 echo.
 echo ===================================================
-echo   SUCCESS! The application is now running.
-echo   You can minimize this window during the defense.
+echo ACDI Inventory System is now running.
 echo ===================================================
+echo.
 pause
-localhost
