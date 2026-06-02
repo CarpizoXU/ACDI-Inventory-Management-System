@@ -23,14 +23,6 @@ IF %ERRORLEVEL% NEQ 0 (
 echo.
 echo [*] Checking Backend Dependencies...
 cd backend
-:: Ensure backend .env exists (do not overwrite existing)
-IF NOT EXIST "\.env" (
-    echo REM Backend .env created by install.bat. Fill in real values.> .env
-    echo REM See .env.example for required variables.>> .env
-    echo [*] Created backend\.env - please update it with real values. 
-) ELSE (
-    echo [OK] backend\.env already exists.
-)
 IF EXIST "node_modules\" (
     echo [OK] Backend modules already installed! Skipping...
 ) ELSE (
@@ -43,14 +35,6 @@ cd ..
 echo.
 echo [*] Checking Frontend Dependencies...
 cd frontend
-:: Ensure frontend .env exists (do not overwrite existing)
-IF NOT EXIST "\.env" (
-    echo REM Frontend .env created by install.bat. Fill in real values.> .env
-    echo REM Example: VITE_API_BASE_URL=http://localhost:5000 >> .env
-    echo [*] Created frontend\.env - please update it with real values. 
-) ELSE (
-    echo [OK] frontend\.env already exists.
-)
 IF EXIST "node_modules\" (
     echo [OK] Frontend modules already installed! Skipping...
 ) ELSE (
