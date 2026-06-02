@@ -108,6 +108,11 @@ async function updateProduct(id, updates) {
     stockStatus: computeStockStatus(quantity, threshold),
   };
 
+  // Only update lastStockMovementDate if quantity is actually changing
+  if (updates.quantity != null && updates.quantity !== existing.quantity) {
+    payload.lastStockMovementDate = new Date();
+  }
+
   return productRepository.updateProduct(id, payload);
 }
 
