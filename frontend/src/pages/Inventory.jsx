@@ -29,8 +29,8 @@ const initialForm = {
 };
 
 const modalTitleMap = {
-  create: 'Add new product',
-  edit: 'Edit product',
+  create: 'Add new item',
+  edit: 'Edit item',
 };
 
 function clampNonNegative(value) {
@@ -398,7 +398,7 @@ export default function InventoryPage() {
             onClick={openCreateModal}
             className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700"
           >
-            + Add New Product
+            + Add New Item
           </button>
         </div>
       </div>
@@ -686,7 +686,7 @@ export default function InventoryPage() {
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={closeModal} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">Cancel</button>
-            <button type="submit" className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700">{modalMode === 'edit' ? 'Save Changes' : 'Add Product'}</button>
+            <button type="submit" className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-700">{modalMode === 'edit' ? 'Save Changes' : 'Add Item'}</button>
           </div>
         </form>
       </Modal>
