@@ -25,11 +25,12 @@ echo.
 
 :: Backend
 echo [*] Checking Backend Dependencies...
-cd backend
-IF EXIST "node_modules\" (
-    echo [OK] Backend modules already installed! Skipping...
-) ELSE (
-    echo [*] Installing Backend Node Modules (this might take a minute)...
+
+if exist "backend\node_modules" (
+    echo [OK] Backend modules already installed.
+) else (
+    echo [*] Installing Backend Node Modules...
+    cd /d backend
     call npm install
     if errorlevel 1 (
         echo.
@@ -44,11 +45,12 @@ echo.
 
 :: Frontend
 echo [*] Checking Frontend Dependencies...
-cd frontend
-IF EXIST "node_modules\" (
-    echo [OK] Frontend modules already installed! Skipping...
-) ELSE (
-    echo [*] Installing Frontend Node Modules (this might take a minute)...
+
+if exist "frontend\node_modules" (
+    echo [OK] Frontend modules already installed.
+) else (
+    echo [*] Installing Frontend Node Modules...
+    cd /d frontend
     call npm install
     if errorlevel 1 (
         echo.
@@ -84,4 +86,3 @@ echo ACDI Inventory System is now running.
 echo ===================================================
 echo.
 pause
-localhost
